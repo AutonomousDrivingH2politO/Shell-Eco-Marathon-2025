@@ -1,0 +1,23 @@
+# Ignore all except specific files or patterns
+*.deb
+*.run
+build/
+log/
+install/
+spatial_mapping_output/
+*.pt 
+*.onnx
+.vscode/
+*.gv 
+*.pdf
+
+# Ensure these are tracked
+!.gitignore
+!*.txt
+
+# Handle src/ explicitly
+!src/
+!src/**/*.txt
+__pycache__/
+*.pyc
+*.pyo
