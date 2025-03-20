@@ -9,6 +9,7 @@ from sensor_msgs.msg import Image, Imu
 from std_msgs.msg import Header
 from geometry_msgs.msg import Quaternion, Vector3
 import pyzed.sl as sl
+from shared_objects.ROS_utils import Topics
 from cv_bridge import CvBridge
 
 
@@ -42,6 +43,7 @@ class ZEDCameraNode(Node):
         super().__init__('zed_camera_node')
 
         # Initialize ZED camera
+        self.topic_names = Topics().topic_names
         self.zed = sl.Camera()
         init_params = sl.InitParameters()
         init_params.camera_resolution = sl.RESOLUTION.HD2K  # Use HD720 or HD1200 video mode
@@ -60,7 +62,7 @@ class ZEDCameraNode(Node):
         self.bridge = CvBridge()
 
         # Create a publisher to publish images
-        self.image_publ = self.create_publisher(Image, 'left_image', 1)
+        self.image_publ = self.create_publisher(Image, self.topic_names["RGB_image"], 1)
         self.image_pubr = self.create_publisher(Image, 'right_image', 1)
         self.imu_pub = self.create_publisher(Imu,'imu/data', 1)
 
