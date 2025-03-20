@@ -77,7 +77,7 @@ class SegNode(Node):
         self.model_enable_pub = self.create_publisher(Bool, topic_names["model_enable"], 10)
 
         # Subscribers
-        self.create_subscription(Image, "/zed/zed_node/rgb/image_rect_color", self.image_callback, 10)
+        self.create_subscription(Image, topic_names["RGB_image"], self.image_callback, 10)
 
         # Notify model initialization
         self.model_enable_pub.publish(self.bool_msg)

@@ -43,7 +43,8 @@ class ZEDCameraNode(Node):
         super().__init__('zed_camera_node')
 
         # Initialize ZED camera
-        self.topic_names = Topics().topic_names
+        topics = Topics()
+        self.topic_names = topics.topic_names
         self.zed = sl.Camera()
         init_params = sl.InitParameters()
         init_params.camera_resolution = sl.RESOLUTION.HD2K  # Use HD720 or HD1200 video mode

@@ -10,8 +10,7 @@ from datetime import datetime
 #modify the directory of shared_objects
 import os
 import sys
-sys.path.append(os.path.abspath(os.path.join('/Users/umutcanalkan/AUG_SEM/src/shared_objects/src')))
-sys.path.append(os.path.dirname(__file__))
+
 from shared_objects.ROS_utils import Topics, SHOW
 
 from shared_objects.utils_path import computing_lateral_distance, processing_mask
@@ -37,7 +36,7 @@ class PathPlanningNode(Node):
         self.req_speed_pub = self.create_publisher(Float64, topic_names['requested_speed'], 10)
 
         self.image_sub = self.create_subscription(Image, topic_names['segmented_image'], self.image_callback, 10)
-        self.original_image_sub = self.create_subscription(Image, topic_names['RGB_image'], self.original_image_callback, 10)
+        #self.original_image_sub = self.create_subscription(Image, topic_names[''], self.original_image_callback, 10)
 
         self.bridge = CvBridge()
         self.counter = 0
@@ -72,10 +71,10 @@ class PathPlanningNode(Node):
 
         return logs_folder, output_folder, frames_folder
 
-    def original_image_callback(self, data):
+    """def original_image_callback(self, data):
         # Store the RGB image
         self.cv_image = self.bridge.imgmsg_to_cv2(data, "rgb8")
-
+"""
     def image_callback(self, data):
         # Convert ROS Image message to OpenCV image
         mask = self.bridge.imgmsg_to_cv2(data, "mono8")
@@ -127,7 +126,7 @@ class PathPlanningNode(Node):
             concatenated_image = np.hstack((cv2.cvtColor(resized_image, cv2.COLOR_BGR2RGB),
                                             cv2.cvtColor(resized_mask, cv2.COLOR_GRAY2RGB),
                                             cv2.cvtColor(resized_line_edges, cv2.COLOR_GRAY2BGR)))
-            cv2.imshow("Ci abbiamo provato", concatenated_image)
+            cv2.imshow("Denedik :(", concatenated_image)
             cv2.waitKey(1)
 
         # Publish the steering angle
