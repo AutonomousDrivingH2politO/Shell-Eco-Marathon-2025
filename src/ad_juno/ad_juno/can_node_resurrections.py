@@ -26,7 +26,7 @@ class CanBus(Node):
         self.run_mode = 0
         self.rpm = 0
         self.start_time = -1
-        self.can_interface = can.interface.Bus(channel="vcan0", bustype="socketcan")
+        self.can_interface = can.interface.Bus(channel="can0", bustype="socketcan")
         self.logger = self.get_logger()
 
         # Initialize topics and publishers

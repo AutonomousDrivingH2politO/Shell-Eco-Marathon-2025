@@ -10,7 +10,7 @@ from std_msgs.msg import Header
 from geometry_msgs.msg import Quaternion, Vector3
 import pyzed.sl as sl
 from cv_bridge import CvBridge
-import os
+
 
 class ZEDCameraNode(Node):
 
@@ -41,10 +41,6 @@ class ZEDCameraNode(Node):
     def __init__(self):
         super().__init__('zed_camera_node')
 
-        # Declaring the parameters for Debug mode
-        self.declare_parameter('debug_mode', False) # False by default
-        self.debug_mode = self.get_parameter('debug_mode').value # If recieves the debug_mode:=true takes the boolean True
-
         # Initialize ZED camera
         self.zed = sl.Camera()
         init_params = sl.InitParameters()
@@ -66,20 +62,12 @@ class ZEDCameraNode(Node):
         # Create a publisher to publish images
         self.image_publ = self.create_publisher(Image, 'left_image', 1)
         self.image_pubr = self.create_publisher(Image, 'right_image', 1)
-        self.image_publisher = self.create_publisher(Image, "zed/zed_node/RGB_IMAGE", 1)
         self.imu_pub = self.create_publisher(Imu,'imu/data', 1)
 
         # Set up a timer to grab images periodically 
         self.timer_image = self.create_timer(1.0/15, self.timer_callback_image)
         self.timer_imu = self.create_timer(1.0/15,self.timer_callback_imu)
-        
-        # Create folder for debug images
-        if self.debug_mode:
-            try:
-                os.makedirs("debug_images", exist_ok=True)
-                self.get_logger().info("-------Debug mode enabled zed_node will save the images-------")
-            except:
-                self.get_logger().warning("Unable to create debug folder!")
+
     def printSensorParameters(self,sensor_parameters):
         if sensor_parameters.is_available:
             self.get_logger().info("*****************************")
@@ -160,8 +148,8 @@ class ZEDCameraNode(Node):
             opencv_image_right = cv2.cvtColor(right_image.get_data(),cv2.COLOR_BGRA2BGR)
 
             # Convert OpenCV image to ROS Image message
-            ros_image_left = self.bridge.cv2_to_imgmsg(opencv_image_left, encoding="8uc4")
-            ros_image_right = self.bridge.cv2_to_imgmsg(opencv_image_right, encoding="8uc4")
+            ros_image_left = self.bridge.cv2_to_imgmsg(opencv_image_left, encoding="bgr8")
+            ros_image_right = self.bridge.cv2_to_imgmsg(opencv_image_right, encoding="bgr8")
 
             # Add timestamp to the message header
             ros_image_left.header = Header()
@@ -175,26 +163,15 @@ class ZEDCameraNode(Node):
             self.get_logger().info(f"Publishing image: {left_image.get_width()} x {left_image.get_height()}")
             self.get_logger().info(f"Publishing image: {right_image.get_width()} x {right_image.get_height()}")
 
-            if self.debug_mode:
-                left_im_path = f"debug_images/left_{ros_image_left.header.stamp}.png"
-                right_im_path = f"debug_images/right_{ros_image_right.header.stamp}.png"
-                
-                cv2.imwrite(left_im_path, ros_image_left)
-                cv2.imwrite(right_im_path, ros_image_right)
-
-                self.get_logger().info(f"Saved left image to {left_im_path}")
-                self.get_logger().info(f"Saved right image to {right_im_path}")
-
-
 
     def close_camera(self):
         self.zed.close()
         super().destroy_node()
 
-def main(args=None): # No argument if not received
-    # To run in debug mode run using $ ros2 run ad_juno ros_node --ros-args -p debug_mode:=true
-    # I used ROS parameters instead of sys.argv for better ROS framework implementations
-    rclpy.init(args=args, context=rclpy.get_default_context())
+def main():
+    #if args[0] == "DEBUG":
+        #Debug mode to save the video
+    rclpy.init(args=None, context=rclpy.get_default_context())
 
     node = ZEDCameraNode() 
     try:
@@ -208,4 +185,3 @@ def main(args=None): # No argument if not received
 
 if __name__ == '__main__':
     main()
-

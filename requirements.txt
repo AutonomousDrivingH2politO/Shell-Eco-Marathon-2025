@@ -2,7 +2,7 @@ shared_objects==0.1.2
 empy
 catkin-pkg
 python-can
-numpy
+numpy<2
 scipy
 torch
 torchvision
@@ -12,3 +12,4 @@ opencv-python
 matplotlib
 pytrinamic
 setuptools==58.0.0
+ultralytics
