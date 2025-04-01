@@ -9,7 +9,7 @@ After=network.target
 [Service]
 Type=simple
 User=bylogix
-ExecStart=/home/bylogix/Shell-Eco-Marathon-2025/src/ad_juno/scripts
+ExecStart=/home/bylogix/Shell-Eco-Marathon-2025/src/ad_juno/scripts/autostart.sh
 Restart=on-failure
 RestartSec=5s
 

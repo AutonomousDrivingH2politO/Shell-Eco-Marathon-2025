@@ -54,10 +54,12 @@ log_message "Workspace sourced"
 log_message "Starting autonomous driving system"
 
 # Launch ROS 2 nodes (uncomment both if needed)
-log_message "Launching ROS 2 nodes..."
-ros2 launch juno_bringup button_engage.launch.py &
+log_message "Launching engage_button.py"
+# ros2 launch juno_bringup button_engage.launch.py &
+exec python3 engage_button.py &
+
 if [ $? -ne 0 ]; then
-    log_message "Failed to launch button_engage.launch.py"
+    log_message "Failed to launch engage_button.py"
     exit 1
 fi
 

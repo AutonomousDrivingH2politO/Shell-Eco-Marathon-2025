@@ -6,6 +6,7 @@ from std_msgs.msg import Bool
 import Jetson.GPIO as GPIO  # Uncomment this for Jetson
 import time
 from shared_objects.ROS_utils import Topics
+import os
 
 class ButtonEngageNode(Node):
     def __init__(self):
@@ -43,6 +44,9 @@ class ButtonEngageNode(Node):
         if button_pressed != self.system_engaged:
             self.system_engaged = button_pressed
             self.update_system_state()
+
+        if self.system_engaged == True:
+            os.system("ros2 launch ad_juno juno_bringup path_planning.launch.py")
 
     def update_system_state(self):
         enable_msg = Bool()
