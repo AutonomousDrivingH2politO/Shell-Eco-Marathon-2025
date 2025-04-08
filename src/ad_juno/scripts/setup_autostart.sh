@@ -33,9 +33,15 @@ Requires=graphical.target
 
 [Service]
 Type=simple
+<<<<<<< HEAD
 User=$SERVICE_USER
 ExecStart=$SCRIPT_PATH
 Restart=always                # Restart indefinitely
+=======
+User=bylogix
+ExecStart=/home/bylogix/Shell-Eco-Marathon-2025/src/ad_juno/scripts/autostart.sh
+Restart=on-failure
+>>>>>>> 9b118d82f9bfa9e90b2ae189dceaa562167c6108
 RestartSec=5s
 Environment="DISPLAY=:0"      # Explicitly set display
 Environment="XAUTHORITY=/home/$SERVICE_USER/.Xauthority"
