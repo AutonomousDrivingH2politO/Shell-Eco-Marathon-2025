@@ -4,9 +4,6 @@ catkin-pkg
 python-can
 numpy<2
 scipy
-torch
-torchvision
-torchaudio
 TMCL
 opencv-python
 matplotlib

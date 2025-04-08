@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/home/bylogix/torch/bin/python
 import os
 import time
 import rclpy
@@ -20,7 +20,7 @@ topic_names = topics.topic_names
 
 # Global parameters
 wheelbase = 1.6
-model_type = "yolop"  # Choose from "hybridnets", "yolop"
+model_type = "hybridnets"  # Choose from "hybridnets", "yolop"
 half = False
 count = 0
 seg_img_id = 0
