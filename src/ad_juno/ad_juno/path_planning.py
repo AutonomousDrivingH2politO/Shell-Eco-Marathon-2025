@@ -25,7 +25,6 @@ DEBUG = True
 wheelbase = 1.6
 speed = 15.0
 gain = 0
-cv_image = None
 
 # Node class
 class PathPlanningNode(Node):
@@ -36,10 +35,11 @@ class PathPlanningNode(Node):
         self.req_speed_pub = self.create_publisher(Float64, topic_names['requested_speed'], 10)
 
         self.image_sub = self.create_subscription(Image, topic_names['segmented_image'], self.image_callback, 10)
-        self.original_image_sub = self.create_subscription(Image, topic_names['/zed/zed_node/rgb/image_rect_color'], self.original_image_callback, 10)
+        self.original_image_sub = self.create_subscription(Image, '/zed/zed_node/rgb/image_rect_color', self.original_image_callback, 10)
 
         self.bridge = CvBridge()
         self.counter = 0
+        self.cv_image = None
 
         if DEBUG:
             self.logs_folder, self.output_folder, self.frames_folder = self.set_debug_folders()
@@ -73,15 +73,15 @@ class PathPlanningNode(Node):
 
     def original_image_callback(self, data):
         # Store the RGB image
-        cv_image = self.bridge.imgmsg_to_cv2(data, "rgb8")
+        self.cv_image = self.bridge.imgmsg_to_cv2(data, "rgb8")
 
     def image_callback(self, data):
         # Convert ROS Image message to OpenCV image
         mask = self.bridge.imgmsg_to_cv2(data, "mono8")
-        line_edges = processing_mask(mask, cv_image)
+        line_edges = processing_mask(mask, self.cv_image)
 
         # Calculate distances and midpoint
-        lateral_distance, longitudinal_distance, midpoints = computing_lateral_distance(line_edges, show=SHOW)
+        lateral_distance, longitudinal_distance, midpoints, _ = computing_lateral_distance(line_edges, show=SHOW)
 
         # Calculate steering angle
         distance_to_waypoint = (longitudinal_distance + gain) ** 2 + lateral_distance ** 2
@@ -96,7 +96,7 @@ class PathPlanningNode(Node):
                 for p in midpoints:
                     cv2.circle(line_edges, tuple(p[::-1]), 2, (200, 200, 200), 3)
 
-            resized_image = cv2.resize(cv_image, (540, 360))
+            resized_image = cv2.resize(self.cv_image, (540, 360))
             resized_mask = cv2.resize(mask, (540, 360))
             resized_line_edges = cv2.resize(line_edges, (540, 360))
             concatenated_image = np.hstack((cv2.cvtColor(resized_image, cv2.COLOR_BGR2RGB),
@@ -106,7 +106,7 @@ class PathPlanningNode(Node):
             # Save frame and output images
             frame_name = f"frame_{self.counter}.png"
             frame_path = os.path.join(self.frames_folder, frame_name)
-            cv2.imwrite(frame_path,cv_image)
+            cv2.imwrite(frame_path,self.cv_image)
 
             output_name = f"output_{self.counter}.png"
             output_path = os.path.join(self.output_folder, output_name)
@@ -120,7 +120,7 @@ class PathPlanningNode(Node):
 
         # Display concatenated image if SHOW is enabled
         if SHOW:
-            resized_image = cv2.resize(cv_image, (540, 360))
+            resized_image = cv2.resize(self.cv_image, (540, 360))
             resized_mask = cv2.resize(mask, (540, 360))
             resized_line_edges = cv2.resize(line_edges, (540, 360))
             concatenated_image = np.hstack((cv2.cvtColor(resized_image, cv2.COLOR_BGR2RGB),
@@ -139,7 +139,8 @@ class PathPlanningNode(Node):
         self.get_logger().info(f"Steering Angle: {degree_steering_angle}")
 
     def new_method(self):
-        return cv_image
+        self.cv_image
+        return 
 
 def main(args=None):
     rclpy.init(args=args)
