@@ -1,1 +1,0 @@
-4: - longitudinal_distance: 7.5 - degree_steering_angle: 0.0
