@@ -31,6 +31,8 @@ setup(
             "zed_node = ad_juno.zed_node:main",
             "zed_publisher = ad_juno.zed_publisher:main",
             "button_engage_node = ad_juno.button_engage_node:main",
+            "steering_node = ad_juno.steering_node:main",
+            "video_test = ad_juno.webcam_test:main",
         ],
     },
 )

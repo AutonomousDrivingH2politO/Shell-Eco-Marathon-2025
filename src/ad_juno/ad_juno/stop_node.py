@@ -38,10 +38,14 @@ class StopSignDetector(Node):
         # Initialize Stepper for brake
         self.brake = Stepper(
             interface="can",
-            module_id=1,  # Module ID for brake
-            max_acc=140_000,
-            max_velocity=50_000,
-            V1=0
+            data_rate=1000000,
+            module_id=3,  # modulo dello sterzo
+            max_velocity=80_000,
+            max_acc=50_000,
+            MaxDeceleration=50_000,  # parametro di esempio: regola se necessario
+            V1=100_000,
+            A1=50_000,             # parametro di esempio: regola se necessario
+            D1=50_000    
         )
 
         # Publishers and subscribers

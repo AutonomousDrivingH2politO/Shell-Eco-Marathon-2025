@@ -12,8 +12,8 @@ def generate_launch_description():
         # exz
             Node(
                 package="ad_juno",
-                executable="zed_node",
-                name="zed_node",
+                executable="video_test",
+                name="video_test",
                 output="screen",
             ),
             Node(
@@ -43,16 +43,11 @@ def generate_launch_description():
 
             Node(
                 package="ad_juno",
-                executable="steering_brake_node",
+                executable="steering_node",
                 name="steering_node",
                 output="screen",
             ),
-            Node(
-                package="ad_juno",
-                executable="stop_node",
-                name="stop_node",
-                output="screen",
-            ),
-            
+          
         ]
     )
+ 

@@ -10,7 +10,8 @@ spatial_mapping_output/
 .vscode/
 *.gv 
 *.pdf
-DENUG/
+DEBUG/
+*.mp4
 
 # Ensure these are tracked
 !.gitignore
