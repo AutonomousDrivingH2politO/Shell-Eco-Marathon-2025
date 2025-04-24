@@ -19,11 +19,7 @@ def enable_launch():
   try:
       print("Launching ROS 2 nodes...")
       ros_process = subprocess.Popen(
-<<<<<<< HEAD
           ["ros2", "launch", "juno_bringup", "path_planning.launch.py"],
-=======
-          ["ros2", "launch", "ad_juno", "juno_bringup", "path_planning.launch.py"],
->>>>>>> 9b118d82f9bfa9e90b2ae189dceaa562167c6108
           preexec_fn=os.setsid  # Create a new process group // allows proper termination of child process
       )
   except Exception as e:
@@ -33,11 +29,7 @@ def enable_launch():
 def stop_launch():
 
     global ros_process
-<<<<<<< HEAD
-    if subprocess:
-=======
     if ros_process:
->>>>>>> 9b118d82f9bfa9e90b2ae189dceaa562167c6108
       print("Stopping ROS 2 nodes...")
       try:
           # Send SIGTERM to the entire process group

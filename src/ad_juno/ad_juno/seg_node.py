@@ -1,4 +1,3 @@
-#!/home/bylogix/torch/bin/python
 import os
 import time
 import rclpy
