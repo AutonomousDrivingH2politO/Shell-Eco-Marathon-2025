@@ -33,6 +33,7 @@ setup(
             "button_engage_node = ad_juno.button_engage_node:main",
             "steering_node = ad_juno.steering_node:main",
             "video_test = ad_juno.webcam_test:main",
+            "steering_node_relative = ad_juno.steering_node_relative:main",
         ],
     },
 )
