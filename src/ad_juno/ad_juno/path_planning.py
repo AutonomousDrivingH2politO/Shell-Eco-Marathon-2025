@@ -81,7 +81,7 @@ class PathPlanningNode(Node):
         line_edges = processing_mask(mask, self.cv_image)
 
         # Calculate distances and midpoint
-        lateral_distance, longitudinal_distance, midpoints, _ = computing_lateral_distance(line_edges, show=SHOW)
+        lateral_distance, longitudinal_distance, midpoints, = computing_lateral_distance(line_edges, show=SHOW)
 
         # Calculate steering angle
         distance_to_waypoint = (longitudinal_distance + gain) ** 2 + lateral_distance ** 2
