@@ -25,6 +25,7 @@ setup(
             "can_node_resurrections = ad_juno.can_node_resurrections:main",  # Entry point for can_node_resurrections.py
             "stop_node = ad_juno.stop_node:main",
             "path_planning = ad_juno.path_planning:main",
+            "path_planning_plus3 = ad_juno.path_planning_plus3:main",
             "seg_node = ad_juno.seg_node:main",
             "steering_brake_node = ad_juno.steering_brake_node:main",
             "throttle_node = ad_juno.throttle_node:main",

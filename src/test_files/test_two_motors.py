@@ -8,7 +8,7 @@ modules={            #Receive ID CAN (da controllare su TMCL_IDE)
     "brake":1
 }
 
-interface_br=ConnectionManager("--interface socketcan_tmcl --port can0 --data-rate 250000").connect() #data-rate = bitrate se vuoi controllare a un bitrate differente ricorda di cambiare anche nel IDE di pytrinamic
+interface_br=ConnectionManager("--interface socketcan_tmcl --port can1 --data-rate 1000000").connect() #data-rate = bitrate se vuoi controllare a un bitrate differente ricorda di cambiare anche nel IDE di pytrinamic
 interface_st=ConnectionManager("--interface socketcan_tmcl --port can1 --data-rate 1000000").connect()
 
 

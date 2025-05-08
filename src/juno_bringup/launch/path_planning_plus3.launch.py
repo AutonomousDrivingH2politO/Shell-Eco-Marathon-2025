@@ -9,30 +9,17 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     return LaunchDescription(
         [
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    [
-                        PathJoinSubstitution(
-                            [
-                                FindPackageShare("zed_wrapper"),
-                                "launch",
-                                "zed_camera.launch.py",
-                            ]
-                        )
-                    ]
-                ),
-                launch_arguments={"camera_model": "zed2i", "sim_mode": "true"}.items(),
-            ),
-           Node(
+        # exz
+            Node(
                 package="ad_juno",
-                executable="obstacle_avoidance",
-                name="obstacle_avoidance",
+                executable="video_test",
+                name="video_test",
                 output="screen",
             ),
             Node(
                 package="ad_juno",
-                executable="steering_brake_node",
-                name="steering_brake_node",
+                executable="path_planning_plus3",
+                name="path_planning_plus3",
                 output="screen",
             ),
             Node(
@@ -59,5 +46,12 @@ def generate_launch_description():
                 name="stop_node",
                 output="screen",
             ),
+            Node(
+                package="ad_juno",
+                executable="steering_node",
+                name="steering_node",
+                output="screen",
+            ),
+
         ]
     )

@@ -14,6 +14,16 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
 
+log "Running CAN setup script..."
+modprobe can
+modprobe mttcan 
+modprobe can_raw
+ip link set can1 type can bitrate 1000000
+ip link set can1 up
+ip link set can0 type can bitrate 250000
+ip link set can0 up
+
+
 log "Initializing autonomous driving system..."
 
 # Source ROS 2

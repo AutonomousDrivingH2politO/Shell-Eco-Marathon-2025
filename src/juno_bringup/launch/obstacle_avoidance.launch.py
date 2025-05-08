@@ -4,15 +4,15 @@ from launch_ros.actions import Node
 def generate_launch_description():
     return LaunchDescription([
         Node(
-            package='juno_aug',
-            executable='obstacle_avoidance.py',
+            package='ad_juno',
+            executable='obstacle_avoidance',
             name='obstacle_avoidance',
             output='screen'
         ),
         Node(
-            package='juno_aug',
-            executable='steering_brake_node.py',
-            name='steering_brake_node',
+            package='ad_juno',
+            executable='steering_node',
+            name='steering_node',
             output='screen'
         ),
     ])

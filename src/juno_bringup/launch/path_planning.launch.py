@@ -40,14 +40,18 @@ def generate_launch_description():
                 name="throttle_node",
                 output="screen",
             ),
-
+            Node(
+                package="ad_juno",
+                executable="stop_node",
+                name="stop_node",
+                output="screen",
+            ),
             Node(
                 package="ad_juno",
                 executable="steering_node",
                 name="steering_node",
                 output="screen",
             ),
-          
+
         ]
     )
- 

@@ -33,7 +33,7 @@ class PathPlanningNode(Node):
 
         self.steer_pub = self.create_publisher(Float64, topic_names['steering'], 10)
         self.req_speed_pub = self.create_publisher(Float64, topic_names['requested_speed'], 10)
-
+        self.bev_pub = self.create_publisher(Image, "/birds_eye_view", 10)
         self.image_sub = self.create_subscription(Image, topic_names['segmented_image'], self.image_callback, 10)
         self.original_image_sub = self.create_subscription(Image, '/zed/zed_node/rgb/image_rect_color', self.original_image_callback, 10)
 
@@ -80,8 +80,12 @@ class PathPlanningNode(Node):
         mask = self.bridge.imgmsg_to_cv2(data, "mono8")
         line_edges = processing_mask(mask, self.cv_image)
 
+        birds_eye_msg = self.bridge.cv2_to_imgmsg(line_edges, encoding="mono8")
+        
+        self.bev_pub.publish(birds_eye_msg)
+        
         # Calculate distances and midpoint
-        lateral_distance, longitudinal_distance, midpoints, = computing_lateral_distance(line_edges, show=SHOW)
+        lateral_distance, longitudinal_distance, midpoints = computing_lateral_distance(line_edges, show=SHOW)
 
         # Calculate steering angle
         distance_to_waypoint = (longitudinal_distance + gain) ** 2 + lateral_distance ** 2

@@ -12,6 +12,7 @@ spatial_mapping_output/
 *.pdf
 DEBUG/
 *.mp4
+*.webm
 
 # Ensure these are tracked
 !.gitignore

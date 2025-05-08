@@ -22,7 +22,7 @@ from shared_objects.Motor import Stepper  # Import Stepper for brake functionali
 
 class StopSignDetector(Node):
     def __init__(self):
-        super().__init__('stop_sign_detector', parameter_overrides=[])
+        super().__init__('stop_node', parameter_overrides=[])
         
         self.enable = True
         self.count_stop = 0

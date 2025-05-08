@@ -145,7 +145,7 @@ class PathPlanningNode(Node):
         mask = self.bridge.imgmsg_to_cv2(data, "mono8")
         line_edges = processing_mask(mask, self.cv_image, show=SHOW)
 
-        lateral_distance, longitudinal_distance, curvature, midpoints = computing_lateral_distance(line_edges, show=SHOW)
+        lateral_distance, longitudinal_distance, midpoints = computing_lateral_distance(line_edges, show=SHOW)
 
         if lateral_distance == -np.inf:
             degree_steering_angle = -40.0
