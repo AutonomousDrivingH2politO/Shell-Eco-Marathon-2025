@@ -62,7 +62,7 @@ class CanBus(Node):
         data_array = list(data.to_bytes(2, byteorder="big"))
         data_array += [0] * (8 - len(data_array))
         msg = can.Message(arbitration_id=id, data=bytearray(data_array), is_extended_id=False)
-        self.logger.info(f"Sending CAN message with ID {id}")
+        self.logger.info(f"Sending CAN message with ID {msg.id}")
         self.can_interface.send(msg)
 
     def callback_throttle(self, data: Float32):
