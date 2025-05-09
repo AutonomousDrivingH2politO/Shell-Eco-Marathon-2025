@@ -10,6 +10,7 @@ from datetime import datetime
 #modify the directory of shared_objects
 import os
 import sys
+from pathlib import Path
 
 from shared_objects.ROS_utils import Topics, SHOW
 
@@ -21,15 +22,15 @@ import cv2
 topics = Topics()
 topic_names = topics.topic_names
 
-DEBUG = True
-wheelbase = 1.6
-speed = 15.0
-gain = 0
-
 # Node class
 class PathPlanningNode(Node):
     def __init__(self):
         super().__init__('path_planning_node')
+        self.wheelbase = 1.6
+        self.speed = 15.0
+        self.gain = 0
+        self.DEBUG = True
+
 
         self.steer_pub = self.create_publisher(Float64, topic_names['steering'], 10)
         self.req_speed_pub = self.create_publisher(Float64, topic_names['requested_speed'], 10)
@@ -39,37 +40,49 @@ class PathPlanningNode(Node):
 
         self.bridge = CvBridge()
         self.counter = 0
-        self.cv_image = None
+        self.cv_image = None 
 
-        if DEBUG:
+        self.declare_parameter(
+            'debug_root',
+            '/home/bylogix/Shell-Eco-Marathon-2025/DEBUG'   # default
+        )
+        self.debug_root = Path(
+        self.get_parameter('debug_root').get_parameter_value().string_value
+        )
+        
+        if self.DEBUG:
             self.logs_folder, self.output_folder, self.frames_folder = self.set_debug_folders()
 
         # Initial speed
         req_speed_msg = Float64()
-        req_speed_msg.data = speed
+        req_speed_msg.data = self.speed
         self.req_speed_pub.publish(req_speed_msg)
 
     def set_debug_folders(self):
-        debug_folder = os.path.join(os.getcwd(), "DEBUG")
         try:
-            if not os.path.exists(debug_folder):
-                os.makedirs(debug_folder)
-        except OSError as e:
-            self.get_logger().error(f"Error creating debug folder: {e}")
+            # absolute, user-controlled root
+            self.debug_root.mkdir(parents=True, exist_ok=True)
 
-        now = datetime.now()
-        folder = os.path.join(debug_folder, now.strftime("%Y_%m_%d_%H_%M_%S"))
-        os.makedirs(folder)
+            # time-stamped run folder
+            ts_folder = self.debug_root / datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+            ts_folder.mkdir()
 
-        # Create subfolders for logs, output, and frames
-        logs_folder = os.path.join(folder, "logs")
-        output_folder = os.path.join(folder, "output")
-        frames_folder = os.path.join(folder, "frames")
-        os.makedirs(logs_folder)
-        os.makedirs(output_folder)
-        os.makedirs(frames_folder)
+            # sub-folders
+            logs  = ts_folder / 'logs'
+            out   = ts_folder / 'output'
+            frames= ts_folder / 'frames'
+            for p in (logs, out, frames):
+                p.mkdir()
 
-        return logs_folder, output_folder, frames_folder
+            # show where we’re writing
+            self.get_logger().info(
+                f'DEBUG output →\n  logs:   {logs}\n  output: {out}\n  frames: {frames}'
+            )
+            return str(logs), str(out), str(frames)
+
+        except Exception as e:
+            self.get_logger().error(f'Failed to create debug folders: {e}')
+            raise
 
     def original_image_callback(self, data):
         # Store the RGB image
@@ -87,12 +100,16 @@ class PathPlanningNode(Node):
         # Calculate distances and midpoint
         lateral_distance, longitudinal_distance, midpoints = computing_lateral_distance(line_edges, show=SHOW)
 
-        # Calculate steering angle
-        distance_to_waypoint = (longitudinal_distance + gain) ** 2 + lateral_distance ** 2
-        degree_steering_angle = math.degrees(math.atan2(2 * wheelbase * lateral_distance, distance_to_waypoint))
+        if lateral_distance == -np.inf:
+            degree_steering_angle = -5.0
+        elif lateral_distance == np.inf:
+            degree_steering_angle = 5.0
+        else:
+            distance_to_waypoint = (longitudinal_distance + self.gain) ** 2 + lateral_distance ** 2
+            degree_steering_angle = math.degrees(math.atan2(2 * self.wheelbase * lateral_distance, distance_to_waypoint))
 
         # Debug mode image display and logging
-        if DEBUG:
+        if self.DEBUG:
             if midpoints is not None:
                 posm = midpoints[-1]
                 midpoints = midpoints[:-1]
