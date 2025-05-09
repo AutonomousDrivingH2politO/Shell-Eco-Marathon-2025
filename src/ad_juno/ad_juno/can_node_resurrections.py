@@ -63,6 +63,7 @@ class CanBus(Node):
         data_array += [0] * (8 - len(data_array))
         msg = can.Message(arbitration_id=id, data=bytearray(data_array), is_extended_id=False)
         self.logger.info(f"Sending CAN message with ID {id}")
+        self.logger.info(f"Sending CAN message {msg.data} with {len(msg.data)} bytes")
         self.can_interface.send(msg)
 
     def callback_throttle(self, data: Float32):
@@ -74,6 +75,7 @@ class CanBus(Node):
     def disable_connection(self):
         self.logger.info("Disabling connection")
         self.send_can(self.can_ids.ENABLE.value, 0)
+        self.send_can(self.can_ids.THROTTLE.value, 0)
         self.can_interface.shutdown()
 
     def butcher_mode(self, message: can.Message):
