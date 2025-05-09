@@ -13,6 +13,7 @@ spatial_mapping_output/
 DEBUG/
 *.mp4
 *.webm
+runs/
 
 # Ensure these are tracked
 !.gitignore
