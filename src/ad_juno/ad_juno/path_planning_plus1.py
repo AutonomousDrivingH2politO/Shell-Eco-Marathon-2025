@@ -104,7 +104,7 @@ class PathPlanningNode(Node):
         # Get the transformation
         try:
             trans, rot = self.tf_buffer.lookup_transform('camera_link', data.header.frame_id, rclpy.time.Time())
-            roll, pitch, yaw = euler_from_quaternion(rot)
+            roll, pitch, yaw = euler_from_quat(rot)
         except Exception as e:
             self.get_logger().warn(f"Transform error: {e}")
             return
