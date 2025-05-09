@@ -29,33 +29,28 @@ class Throttle(Node):
 
 
     def callback_model_enable(self, data):
-        global model_enable
-        model_enable=data.data
+        self.model_enable=data.data
 
     def callback_engine_enable(self, data):
-        global engine_enable
-        engine_enable=data.data
+        self.engine_enable=data.data
 
     def callback_stop(self, data):
-        global stop
     #stop=True => stop => enable=False
     #stop=False => go => enable=True
-        stop=data.data
+        self.stop=data.data
 
     def callback_requested_speed(self, data):
-        global speed_threshold
-        speed_threshold=data.data
+        self.speed_threshold=data.data
 
     def callback_speed(self, value):
-        global thr_msg
-        speed=value.data
+        self.speed=value.data
 
-        if not stop and model_enable and engine_enable and speed <=speed_threshold:
-            thr_msg.data=60
+        if not self.stop and self.model_enable and self.engine_enable and self.speed <=self.speed_threshold:
+            self.thr_msg.data=60.0
         else:
-            thr_msg.data=0
+            self.thr_msg.data=0.0
 
-        self.throttle_pub.publish(thr_msg)
+        self.throttle_pub.publish(self.thr_msg)
 
 def main(args = None):
     rclpy.init(args=args)
