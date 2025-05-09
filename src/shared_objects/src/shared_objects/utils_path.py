@@ -265,11 +265,11 @@ def computing_lateral_distance(line_edges, show=False):
     x_coords_points = computing_mid_point(line_edges, y)
 
     if x_coords_points is None:
-        return LATERAL_DISTANCE, long_dist, None, None
+        return LATERAL_DISTANCE, long_dist, None
     if x_coords_points == -np.inf:
-        return -np.inf, long_dist, None, None
+        return -np.inf, long_dist, None
     elif x_coords_points == np.inf:
-        return np.inf, long_dist, None, None
+        return np.inf, long_dist, None
 
     posm = y, (x_coords_points[1] + x_coords_points[0])//2
 
