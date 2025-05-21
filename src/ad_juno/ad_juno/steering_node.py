@@ -3,12 +3,14 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, HistoryPolicy, ReliabilityPolicy
 from std_msgs.msg import Float64
-from shared_objects.Motor import Stepper
+from shared_objects.Motor_old import Stepper
 from shared_objects.ROS_utils import Topics
+from datetime import datetime
+from pathlib import Path
 
 # Parametri di conversione e limiti
-TRANSMISSION_RATIO = 15
-MAX_ANGLE = 14
+TRANSMISSION_RATIO = 14
+MAX_ANGLE = 10
 STEP_ANGLE = 1.8  # in gradi
 
 class PIDController:
@@ -49,11 +51,29 @@ class SteeringNode(Node):
         # Variabile per memorizzare il target (in gradi) ricevuto via ROS
         self.latest_angle = 0.0
 
+        self.declare_parameter(
+            'debug_root',
+            '/home/bylogix/Shell-Eco-Marathon-2025/DEBUG'  # default path
+        )
+        self.debug_root = Path(
+            self.get_parameter('debug_root').get_parameter_value().string_value
+        )
+        self.debug_root.mkdir(parents=True, exist_ok=True)
+
+        # Create a timestamped log file for PID logs
+        #timestamp = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+        #counter =0
+        #counter+=1
+        #self.log_file = self.debug_root / timestamp / f"pid_log_{counter}.txt"
+
+        #self.get_logger().info(f"PID logs is in -> {self.log_file}")
+
+
         # QoS per il subscriber
         qos_profile = QoSProfile(
             history=HistoryPolicy.KEEP_LAST,
             depth=1,
-            reliability=ReliabilityPolicy.BEST_EFFORT
+            reliability=ReliabilityPolicy.RELIABLE
         )
 
         topics = Topics()
@@ -115,6 +135,10 @@ class SteeringNode(Node):
         self.get_logger().info(
             f"PID loop: target={target_position}, current={current_position}, output={pid_output}, command={new_command}"
         )
+
+        #PID loop information to the log file
+        #with open(self.log_file, "a") as log:
+        #    log.write(f"PID loop: target={target_position}, current={current_position}, output={pid_output}, command={new_command}\n")
 
         # Invia il comando al motore
         self.steering.move_stepper(new_command)

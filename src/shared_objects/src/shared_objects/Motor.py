@@ -1,56 +1,80 @@
 #!/usr/bin/env python3
+"""
+Stepper class for TMCM-1260 (Trinamic) with:
+  • explicit initial zeroing of ActualPosition and EncoderPosition
+  • continuous tracking of virtual (commanded) and effective (encoder) positions
+  • slip detection / auto-realign
+  • non-blocking brake routine (no sleep calls)
+
+Author: <your-name> — 2025-05-15
+"""
+from time import time
 from pytrinamic.connections import ConnectionManager
 from pytrinamic.modules import TMCM1260
-from time import sleep, time
 
+# global used only to keep the initial offset between virtual and effective positions
 start_deviation_error = 0
 
-def unwrap_position_signed(current_position, previous_position, max_position=2**32):
-    """
-    Funzione di unwrapping per ottenere una posizione "continua" evitando il roll-over.
-    """
-    if current_position >= max_position // 2:
-        current_position_signed = current_position - max_position
-    else:
-        current_position_signed = current_position
 
-    if previous_position >= max_position // 2:
-        previous_position_signed = previous_position - max_position
-    else:
-        previous_position_signed = previous_position
+def unwrap_position_signed(current_position: int, previous_position: int, max_position: int = 2 ** 32) -> int:
+    """
+    Unwrap a signed position so that rollover of the 32-bit counter does not break continuity.
+    """
+    # Convert the two readings to signed values
+    current_signed = current_position - max_position if current_position >= max_position // 2 else current_position
+    previous_signed = previous_position - max_position if previous_position >= max_position // 2 else previous_position
 
-    diff = current_position_signed - previous_position_signed
+    diff = current_signed - previous_signed
+    # Detect wrap-around
     if diff > max_position // 2:
-        return previous_position_signed - (max_position - diff)
+        return previous_signed - (max_position - diff)
     elif diff < -max_position // 2:
-        return previous_position_signed + (max_position + diff)
-    else:
-        return current_position_signed
+        return previous_signed + (max_position + diff)
+    return current_signed
+
 
 class Stepper:
-    def __init__(self, interface, data_rate, module_id, max_velocity, max_acc, MaxDeceleration, V1, A1, D1):
+    """
+    High-level wrapper for a single TMCM-1260 motor (axis 0).
+    """
+
+    def __init__(
+        self,
+        interface: str,
+        data_rate: int,
+        module_id: int,
+        max_velocity: int,
+        max_acc: int,
+        max_deceleration: int,
+        v1: int,
+        a1: int,
+        d1: int,
+    ):
         global start_deviation_error
+
+        # ------------------------- connection -------------------------------- #
         if interface == "can":
-            communication = "socketcan_tmcl"
+            transport = "socketcan_tmcl"
         elif interface == "usb":
-            communication = "usb_tmcl"
+            transport = "usb_tmcl"
         else:
-            raise ValueError(f"Cannot use {interface} communication, possible values are 'can' or 'usb'")
+            raise ValueError("interface must be 'can' or 'usb'")
 
-        # Inizializzazione dell'interfaccia del motore:
-        self.interface = ConnectionManager(f"--interface {communication} --port can1 --data-rate {data_rate}").connect()
-        self.module_id = module_id
-        self.data_rate = data_rate
+        self.interface = ConnectionManager(
+            f"--interface {transport} --port can1 --data-rate {data_rate}"
+        ).connect()
         self.module = TMCM1260(self.interface, module_id=module_id)
-        self.motor = self.module.motors[0]
+        self.motor = self.module.motors[0]  # axis 0
 
-        # Impostazione dei parametri del motore:
+        # ------------------------- motor setup -------------------------------- #
+        # Motion parameters
         self.motor.set_axis_parameter(self.motor.AP.MaxVelocity, max_velocity)
         self.motor.set_axis_parameter(self.motor.AP.MaxAcceleration, max_acc)
-        self.motor.set_axis_parameter(self.motor.AP.MaxDeceleration, MaxDeceleration)
-        self.motor.set_axis_parameter(self.motor.AP.V1, V1)
-        self.motor.set_axis_parameter(self.motor.AP.A1, A1)
-        self.motor.set_axis_parameter(self.motor.AP.D1, D1)
+        self.motor.set_axis_parameter(self.motor.AP.MaxDeceleration, max_deceleration)
+        self.motor.set_axis_parameter(self.motor.AP.V1, v1)
+        self.motor.set_axis_parameter(self.motor.AP.A1, a1)
+        self.motor.set_axis_parameter(self.motor.AP.D1, d1)
+        # Miscellaneous limits / current / smart energy
         self.motor.set_axis_parameter(self.motor.AP.StartVelocity, 1_000)
         self.motor.set_axis_parameter(self.motor.AP.StopVelocity, 1_000)
         self.motor.set_axis_parameter(self.motor.AP.RampWaitTime, 0)
@@ -63,88 +87,111 @@ class Stepper:
         self.motor.set_axis_parameter(self.motor.AP.SmartEnergyHysteresisStart, 0)
         self.motor.set_axis_parameter(self.motor.AP.SECUS, 1)
         self.motor.set_axis_parameter(self.motor.AP.SmartEnergyThresholdSpeed, 7_999_774)
-        self.motor.drive_settings.boost_current = 0
-        self.motor.drive_settings.microstep_resolution = self.motor.ENUM.MicrostepResolution256Microsteps
 
-        # Impostazione della posizione iniziale: viene azzerata l'encoder a ogni istanziazione
-        self.virtual_position = self.motor.get_actual_position()
+        # Driver settings
+        self.motor.drive_settings.boost_current = 0
+        self.motor.drive_settings.microstep_resolution = (
+            self.motor.ENUM.MicrostepResolution256Microsteps
+        )
+
+        # ------------------------- zero positions ----------------------------- #
+        # Reset BOTH actual (axis register 1) and encoder (axis register 209) positions
+        self.motor.set_actual_position(0)  # wrapper for AP 1
         self.motor.set_axis_parameter(self.motor.AP.EncoderPosition, 0)
-        self.effective_position = self.motor.get_axis_parameter(self.motor.AP.EncoderPosition)
-        start_deviation_error = self.effective_position - self.virtual_position
-        print(f"{self.virtual_position}")
-        # Inizializza le variabili per l'unwrapping
-        self.last_encoder_position = self.motor.get_axis_parameter(self.motor.AP.EncoderPosition)
+
+        # Tracking variables
+        self.virtual_position = 0                    # commanded target
+        self.effective_position = 0                  # encoder reading
+        start_deviation_error = 0                    # no initial offset now
+
+        # Unwrap helper
+        self.last_encoder_position = 0
         self.unwrapped_position = 0
 
-        print(self.motor.drive_settings)
+        print(f"[Stepper] Initialized on port can1 id={module_id}")
+
+    # --------------------------------------------------------------------- #
+    # helpers
+    # --------------------------------------------------------------------- #
+    def update_effective_position(self):
+        """Refresh encoder position cache."""
+        self.effective_position = self.motor.get_axis_parameter(
+            self.motor.AP.EncoderPosition
+        )
 
     def update_unwrapped_position(self):
-        """
-        Aggiorna e restituisce la posizione "unwrapped" basata sulla lettura corrente dell'encoder.
-        """
-        current_encoder = self.motor.get_axis_parameter(self.motor.AP.EncoderPosition)
-        self.unwrapped_position = unwrap_position_signed(current_encoder, self.last_encoder_position)
-        self.last_encoder_position = current_encoder
+        """Return continuous encoder position, compensating roll-over."""
+        current_enc = self.motor.get_axis_parameter(self.motor.AP.EncoderPosition)
+        self.unwrapped_position = unwrap_position_signed(
+            current_enc, self.last_encoder_position
+        )
+        self.last_encoder_position = current_enc
         return self.unwrapped_position
 
-    def computeErr(self):
-        global start_deviation_error
-        t = 200
-        deviation_error = self.effective_position - self.virtual_position - start_deviation_error
-
-        if abs(deviation_error) > t:
+    def compute_slip_error(self, threshold: int = 200):
+        """
+        Compare effective (encoder) and virtual (commanded) positions, returning
+        (slipped?, correction_value).
+        """
+        self.update_effective_position()
+        deviation_error = self.effective_position - self.virtual_position
+        if abs(deviation_error) > threshold:
             return True, deviation_error
-        else:
-            return False, 0
+        return False, 0
 
-    def brake(self):
-        start_time = time()
-        runtime = 0
-        min_pos_rel = -10
-        print("Braking")
-        self.start_pos = self.motor.get_axis_parameter(self.motor.AP.EncoderPosition)
-        self.end_pos = self.start_pos - 70000
-        self.motor.move_to(self.end_pos)
-        print(self.start_pos)
-        sleep(2)
-        self.s_time = time()
-        self.min_pos_rel = -10
-        self.pos_nowAP = self.motor.get_axis_parameter(self.motor.AP.ActualPosition)
-        self.pos_nowEnc = self.motor.get_axis_parameter(self.motor.AP.EncoderPosition)
-        self.devErr = 0
+    # --------------------------------------------------------------------- #
+    # motion
+    # --------------------------------------------------------------------- #
+    def move_to(self, target: int):
+        """Absolute move; keeps virtual_position in sync."""
+        self.motor.move_to(target)
+        self.virtual_position = target
 
-        while runtime < 10:
-            print('move_relative')
-            self.pos_nowAP = self.motor.get_axis_parameter(self.motor.AP.ActualPosition)
-            self.pos_nowEnc = self.motor.get_axis_parameter(self.motor.AP.EncoderPosition)
-            print(f"The position for the parameter 1: {self.pos_nowAP} \nAnd for parameter 209: {self.pos_nowEnc}")
-            self.check, self.devErr = self.computeErr()
-            if self.check:  # se c'è uno slip, correggi la posizione
-                self.motor.move_by(self.devErr)
-                print('WARNING!')
-                sleep(2)
-            self.motor.move_by(min_pos_rel)
-            sleep(0.5)
-            runtime = time() - start_time
+    def move_by(self, delta: int):
+        """Relative move; keeps virtual_position in sync."""
+        self.motor.move_by(delta)
+        self.virtual_position += delta
 
-        print('Going back to almost stretching pos')
-        self.pos_nowAP = self.motor.get_axis_parameter(self.motor.AP.ActualPosition)
-        self.pos_nowEnc = self.motor.get_axis_parameter(self.motor.AP.EncoderPosition)
-        x = self.pos_nowAP - self.pos_nowEnc
-        while self.pos_nowEnc < -100:
-            self.motor.move_to(x)
-            self.pos_nowEnc = self.motor.get_axis_parameter(self.motor.AP.EncoderPosition)
-        self.motor.move_to(x)
-        sleep(0.5)
-
-    def move_stepper(self, step):
+    # --------------------------------------------------------------------- #
+    # non-blocking brake routine
+    # --------------------------------------------------------------------- #
+    def brake(self, retract_ticks: int = 70_000, step: int = -10, timeout_s: int = 10):
         """
-        Esegue il comando di spostamento sullo stepper.
+        Progressive reverse movement (e.g., press brake) without sleeps.
+        Pulls back `retract_ticks`, checking for slip and correcting on-the-fly.
         """
-        print(f"Moving stepper to command: {step}")
-        self.motor.set_axis_parameter(self.motor.AP.SmartEnergyStallVelocity, 0)
-        self.motor.move_to(step)
+        print("[Stepper] Braking...")
+        start_t = time()
 
+        # 1. Ramp back rapidly to main brake position
+        start_enc = self.motor.get_axis_parameter(self.motor.AP.EncoderPosition)
+        end_target = start_enc - retract_ticks
+        self.move_to(end_target)
+
+        # 2. Fine approach with small relative steps while monitoring slip
+        while time() - start_t < timeout_s:
+            slipped, corr = self.compute_slip_error()
+            if slipped:
+                print(f"[WARN] slip detected → correcting by {corr} ticks")
+                self.move_by(corr)  # immediately correct
+
+            self.move_by(step)      # small incremental pull
+            # Busy-wait ~3 ms between iterations using motor status polling
+            _ = self.motor.get_status_word()
+            if time() - start_t >= timeout_s:
+                break
+
+        # 3. Return to balanced position (align AP vs encoder)
+        self.update_effective_position()
+        diff = self.virtual_position - self.effective_position
+        if diff != 0:
+            self.move_by(diff)
+        print("[Stepper] Brake sequence completed")
+
+    # --------------------------------------------------------------------- #
+    # housekeeping
+    # --------------------------------------------------------------------- #
     def disconnect_motor(self):
         self.motor.stop()
         self.interface.close()
+        print("[Stepper] Disconnected")

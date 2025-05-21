@@ -16,10 +16,11 @@ def generate_launch_description():
                 name="video_test",
                 output="screen",
             ),
+
             Node(
                 package="ad_juno",
-                executable="path_planning",
-                name="path_planning",
+                executable="can_node_resurrections",
+                name="can_node",
                 output="screen",
             ),
             Node(
@@ -30,21 +31,22 @@ def generate_launch_description():
             ),
             Node(
                 package="ad_juno",
-                executable="can_node_resurrections",
-                name="can_node",
+                executable="path_planning",
+                name="path_planning",
                 output="screen",
             ),
+        
             Node(
                 package="ad_juno",
-                executable="throttle_node",
-                name="throttle_node",
+                executable="throttle_node_v2",
+                name="throttle_node_v2",
                 output="screen",
             ),
 
             Node(
                 package="ad_juno",
-                executable="steering_node_relative",
-                name="steering_node_relative",
+                executable="steering_node",
+                name="steering_node",
                 output="screen",
             ),
           

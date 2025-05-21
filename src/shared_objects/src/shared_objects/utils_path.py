@@ -13,9 +13,9 @@ import time
 #       Modifica della longitudinal distance quando ci approcciamo ad una curva
 
 SIMULATION = True
-LANE_METERS = 8.5
-Y_METERS = { 10.0 :460,
-             7.5 : 538
+LANE_METERS = 8.9
+Y_METERS = { 10.0 :448,
+             7.5 : 530
             }
 LANE_PIXELS = None
 LATERAL_DISTANCE = 0
@@ -93,8 +93,8 @@ def eye_bird_view(img, mtx, dist, d=530):
     
     undist = undistort(img, mtx, dist)
     src = np.float32([   
-            (720.0, 390.0),
-            (596.0, 390.0),                # ROI Rectangle
+            (700.0, 385.0),
+            (596.0, 385.0),                # ROI Rectangle
             (50.0, 675.0),
             (1230.0, 675.0)
         ])

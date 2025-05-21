@@ -29,6 +29,7 @@ setup(
             "seg_node = ad_juno.seg_node:main",
             "steering_brake_node = ad_juno.steering_brake_node:main",
             "throttle_node = ad_juno.throttle_node:main",
+            "throttle_node_v2 = ad_juno.throttle_node_v2:main",
             "zed_node = ad_juno.zed_node:main",
             "zed_publisher = ad_juno.zed_publisher:main",
             "button_engage_node = ad_juno.button_engage_node:main",

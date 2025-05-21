@@ -21,7 +21,7 @@ def eye_bird_view(img, mtx, dist, src, d):
 
 def load_camera_calib1(sim=False):
     if not sim:
- # ――― ZED 2 K  (LEFT_CAM_HD) ―――
+ # ――― ZED 2i  (LEFT_CAM_HD) ―――
         # [LEFT_CAM_HD]
         fx=532.655
         fy=532.595
@@ -92,13 +92,13 @@ def warp_image(img, warp_shape, src, dst):
     return warped, M, invM
 
 src = np.float32([                   # Simulation (1280, 720)
-    (694.0, 450.0),
-    (586.0, 450.0),
+    (700.0, 385.0),
+    (586.0, 385.0),
     (50.0, 675.0),
     (1230.0, 675.0)
 ])
 
-img = cv2.cvtColor(cv2.imread('/home/bylogix/Shell-Eco-Marathon-2025/calibration_setup/..png'), cv2.COLOR_BGR2RGB)
+img = cv2.cvtColor(cv2.imread('/home/bylogix/Shell-Eco-Marathon-2025/left_20250521_100807.png'), cv2.COLOR_BGR2RGB)
 img = cv2.resize(img, (1280, 720))
 
 ysize = img.shape[0]
@@ -114,7 +114,7 @@ cv2.waitKey(0)
 mtx, dist = load_camera_calib()
 mtx1, dist1 = load_camera_calib1()
 
-d = 530
+d = 535
 warped = eye_bird_view(img, mtx, dist, src, d=d)
 warped1 = eye_bird_view(img, mtx1, dist1, src, d=d)
 

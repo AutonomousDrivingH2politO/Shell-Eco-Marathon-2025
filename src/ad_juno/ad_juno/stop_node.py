@@ -9,12 +9,6 @@ from std_msgs.msg import Bool
 from cv_bridge import CvBridge
 import time  # for sleep function
 
-shared_objects_path = '~/ROS2_WS/src/shared_objects/src/'
-if shared_objects_path not in sys.path:
-    sys.path.insert(0, shared_objects_path)
-
-os.environ['PYTHONPATH'] = f"{os.environ.get('PYTHONPATH', '')}:{shared_objects_path}"
-
 from shared_objects.ROS_utils import Topics, SHOW
 from shared_objects.utils_stop import analysis
 from shared_objects.Motor import Stepper  # Import Stepper for brake functionality
@@ -39,7 +33,7 @@ class StopSignDetector(Node):
         self.brake = Stepper(
             interface="can",
             data_rate=1000000,
-            module_id=3,  # modulo dello sterzo
+            module_id=1,  # modulo dello sterzo
             max_velocity=80_000,
             max_acc=50_000,
             MaxDeceleration=50_000,  # parametro di esempio: regola se necessario
@@ -83,14 +77,14 @@ class StopSignDetector(Node):
                     
                     # Publish stop signal and disable further stop detection temporarily
                     self.is_waiting = True
-                    bool_msg.data = False
-                    self.stop_pub.publish(bool_msg)
+                    self.bool_msg.data = False
+                    self.stop_pub.publish(self.bool_msg)
                     
                     # Wait for some time before re-enabling detection
                     time.sleep(10)
                     
-                    bool_msg.data = True
-                    self.enable_pub.publish(bool_msg)
+                    self.bool_msg.data = True
+                    self.enable_pub.publish(self.bool_msg)
                     self.get_logger().info("Braking process completed.")
                     
                     # Reset counters
@@ -105,8 +99,8 @@ class StopSignDetector(Node):
                 cv2.destroyAllWindows()
     def end_waiting(self):
         # Re-enable detection after waiting
-        bool_msg = Bool(data=True)
-        self.enable_pub.publish(bool_msg)
+        self.bool_msg = Bool(data=True)
+        self.enable_pub.publish(self.bool_msg)
         self.is_waiting = False
         self.enable = True
         self.count_stop = 0

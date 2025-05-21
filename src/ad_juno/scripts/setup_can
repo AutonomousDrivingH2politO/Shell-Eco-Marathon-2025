@@ -1,0 +1,34 @@
+#!/bin/bash
+
+SERVICE_NAME="setup_can"
+SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
+SCRIPT_PATH="/home/bylogix/Shell-Eco-Marathon-2025/src/ad_juno/scripts/setup_can.sh"
+SERVICE_USER="root"  # Explicitly set to root for clarity and necessity
+
+# Ensure the CAN setup script is executable
+sudo chmod +x "$SCRIPT_PATH" || {
+    echo "Error: Failed to make CAN script executable"
+    exit 1
+}
+
+# Create systemd service explicitly running as root
+sudo tee "$SERVICE_FILE" > /dev/null <<EOL
+[Unit]
+Description=CAN Setup Service (requires root)
+After=network.target
+
+[Service]
+Type=oneshot
+User=$SERVICE_USER
+ExecStart=$SCRIPT_PATH
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOL
+
+# Reload, enable, and immediately start the service
+sudo systemctl daemon-reload
+sudo systemctl enable --now "$SERVICE_NAME"
+sudo systemctl status "$SERVICE_NAME"
+

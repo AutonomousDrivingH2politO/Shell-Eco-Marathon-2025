@@ -105,9 +105,9 @@ class PathPlanningNode(Node):
         lateral_distance, longitudinal_distance, midpoints = computing_lateral_distance(line_edges, show=SHOW)
 
         if lateral_distance == -np.inf:
-            degree_steering_angle = -5.0
+            degree_steering_angle = -10.0
         elif lateral_distance == np.inf:
-            degree_steering_angle = 5.0
+            degree_steering_angle = 10.0
         else:
             distance_to_waypoint = (longitudinal_distance + self.gain) ** 2 + lateral_distance ** 2
             degree_steering_angle = math.degrees(math.atan2(2 * self.wheelbase * lateral_distance, distance_to_waypoint))

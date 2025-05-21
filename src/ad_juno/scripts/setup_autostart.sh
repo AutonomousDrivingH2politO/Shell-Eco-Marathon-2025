@@ -3,7 +3,7 @@
 SERVICE_NAME="autonomous_driving"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 SCRIPT_PATH="/home/bylogix/Shell-Eco-Marathon-2025/src/ad_juno/scripts/autostart.sh"
-SERVICE_USER="root"
+
 
 # Make the script executable
 chmod +x "$SCRIPT_PATH" || {
@@ -32,4 +32,3 @@ EOL
 sudo systemctl daemon-reload
 sudo systemctl enable "$SERVICE_NAME"
 sudo systemctl start "$SERVICE_NAME"
-

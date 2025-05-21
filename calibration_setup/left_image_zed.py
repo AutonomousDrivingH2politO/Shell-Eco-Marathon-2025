@@ -13,6 +13,7 @@ from datetime import datetime
 import os
 import cv2
 import pyzed.sl as sl
+import time
 
 def capture_left(output_dir: str = ".",  # where to save
                  resolution: sl.RESOLUTION = sl.RESOLUTION.HD720,
@@ -28,7 +29,7 @@ def capture_left(output_dir: str = ".",  # where to save
 
     runtime = sl.RuntimeParameters()
     left_mat = sl.Mat()
-
+    time.sleep(10)
     if zed.grab(runtime) == sl.ERROR_CODE.SUCCESS:       # new frame available
         zed.retrieve_image(left_mat, sl.VIEW.LEFT)       # left image only  :contentReference[oaicite:0]{index=0}
         img = left_mat.get_data()[:, :, :3]              # BGRA → BGR (drop alpha)  :contentReference[oaicite:1]{index=1}
