@@ -23,3 +23,11 @@ DEBUG/
 __pycache__/
 *.pyc
 *.pyo
+
+# Ignore images and videos 
+*.mp4
+*.jpg
+*.webm 
+*.png 
+runs/
+src/shared_objects/src/shared_objects/TwinLiteNetPlus/
